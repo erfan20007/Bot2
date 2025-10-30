@@ -1,0 +1,43 @@
+# نام Workflow شما
+name: Run Link Shortener
+
+# این به شما اجازه می‌دهد دکمه "Run" را دستی بزنید
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # روی سرور لینوکس اجرا شود
+
+    steps:
+      # ۱. کدهای ریپازیتوری را دانلود می‌کند
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      # ۲. پایتون نسخه 3.10 را نصب می‌کند
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # ۳. کتابخانه‌های پایتون (requests) را نصب می‌کند
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ۴. اسکریپت اصلی را اجرا می‌کند
+      - name: Run main script
+        env:
+          # (مهم) کلید API را از Secret به اسکریپت تزریق می‌کند
+          LINKO_API_KEY: ${{ secrets.LINKO_API_KEY }}
+        run: python run_shortener.py # نام فایل پایتون شما
+
+      # ۵. فایل‌های خروجی را برای دانلود آپلود می‌کند
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: shortener-results # نام فایل Zip خروجی
+          path: |
+            final_shortened_links.txt
+            failed_links_to_retry.txt
